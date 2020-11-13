@@ -1,4 +1,4 @@
-module thot.cps.io/Side-Projects/db_test_manager
+module thot.cps.io/Side-Projects/dbmanager
 
 go 1.15
 
