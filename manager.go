@@ -26,8 +26,8 @@ type dbManager struct {
 	defaultRelationValues map[string]RelationValues
 }
 
-// NewDBManager returns a dbManager
-func NewDBManager(db *sql.DB, t *testing.T, defaultValues map[string]RelationValues) DBManager {
+// New returns a DBManager
+func New(db *sql.DB, t *testing.T, defaultValues map[string]RelationValues) DBManager {
 	return &dbManager{
 		db:                    db,
 		t:                     t,
