@@ -43,85 +43,15 @@ func (dbMan *dbManager) ResolveTestRecord(
 	opts ...RelationValuesOption,
 ) {
 	values := dbMan.relationValues(tableName, opts...)
-
-	tx, err := dbMan.db.Begin()
+	_, err := dbMan.insertBuilder(tableName).SetMap(sq.Eq(values)).Suffix("ON CONFLICT DO NOTHING").Query()
 	if err != nil {
-		dbMan.t.Fatalf("Test setup failed: could not start transaction: %s", err)
+		dbMan.t.Fatalf("Test setup failed: could not create test record for '%s': %+v", tableName, err)
 	}
-
-	err = dbMan.checkIfExisting(tx, tableName, values)
-	switch {
-	case err == sql.ErrNoRows:
-		builder := dbMan.insertBuilder(tableName).SetMap(sq.Eq(values))
-		q, vs, err := builder.ToSql()
-		if err != nil {
-			dbMan.rollback(tx)
-			dbMan.t.Fatalf("Test setup failed: could not generate sql string for '%s': %+v", tableName, err)
-		}
-
-		_, err = tx.Query(q, vs...)
-		if err != nil {
-			dbMan.rollback(tx)
-			dbMan.t.Fatalf("Test setup failed: could not create test record for '%s': %s", tableName, err)
-		}
-
-		dbMan.commit(tx)
-		return
-	case err != nil:
-		dbMan.rollback(tx)
-		dbMan.t.Fatalf("failed during checkIfExisting %s", err)
-	default:
-		// no errors means we found a result and don't need to do anything else
-		dbMan.commit(tx)
-		return
-	}
-}
-
-func (dbMan *dbManager) rollback(tx *sql.Tx) {
-	if err := tx.Rollback(); err != nil {
-		dbMan.t.Fatalf(
-			"Test setup failed: failed to rollback: %s",
-			err,
-		)
-	}
-}
-func (dbMan *dbManager) commit(tx *sql.Tx) {
-	if commitErr := tx.Commit(); commitErr != nil {
-		dbMan.t.Fatalf(
-			"Test setup failed: could not commit transaction: %s", commitErr)
-	}
-}
-
-func (dbMan *dbManager) checkIfExisting(
-	tx *sql.Tx,
-	tableName string,
-	values RelationValues,
-) error {
-	selectValues := sq.Eq(parseSelectValues(values))
-
-	builder := dbMan.selectBuilder(tableName).Where(selectValues).Limit(1)
-	q, vs, err := builder.ToSql()
-	if err != nil {
-		return err
-	}
-
-	row := tx.QueryRow(q, vs...)
-	err = row.Scan()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (dbMan *dbManager) selectBuilder(tableName string) sq.SelectBuilder {
-	return dbMan.queryBuilder.
-		Select("").
-		From(tableName)
 }
 
 func (dbMan *dbManager) insertBuilder(tableName string) sq.InsertBuilder {
 	return dbMan.queryBuilder.
+		RunWith(dbMan.db).
 		Insert(tableName)
 }
 
@@ -146,20 +76,6 @@ func (dbMan *dbManager) getDefaultRelationValues(relationName string) RelationVa
 	values := make(RelationValues)
 	for k, v := range defaultValue {
 		values[k] = v
-	}
-	return values
-}
-
-func parseSelectValues(
-	originalValues RelationValues,
-) map[string]interface{} {
-	values := make(map[string]interface{})
-
-	for k, v := range originalValues {
-		if _, ok := v.(sq.Sqlizer); !ok {
-			values[k] = v
-		}
-
 	}
 	return values
 }
