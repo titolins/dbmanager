@@ -10,7 +10,7 @@ import (
 
 // DBManager represents the dbManager
 type DBManager interface {
-	ResolveTestRecord(string, string, ...RelationValuesOption)
+	ResolveTestRecord(string, ...RelationValuesOption)
 }
 
 // RelationValues represents the models values used for querying the db in tests
@@ -40,7 +40,6 @@ func New(db *sql.DB, t *testing.T, defaultValues map[string]RelationValues) DBMa
 // give values and creates it if it's not there
 func (dbMan *dbManager) ResolveTestRecord(
 	tableName string,
-	stringID string,
 	opts ...RelationValuesOption,
 ) {
 	values := dbMan.relationValues(tableName, opts...)
