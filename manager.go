@@ -19,6 +19,14 @@ type RelationValues map[string]interface{}
 // RelationValuesOption represents the option function to be passed into the db tests manager
 type RelationValuesOption func(RelationValues)
 
+// SetFieldValue is used for creating a RelationValuesOption for setting a
+// specific field's value
+func SetFieldValue(f string, v interface{}) RelationValuesOption {
+	return func(values RelationValues) {
+		values[f] = v
+	}
+}
+
 type dbManager struct {
 	db                    *sql.DB
 	t                     *testing.T
