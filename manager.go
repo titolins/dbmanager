@@ -10,7 +10,7 @@ import (
 
 // DBManager represents the dbManager
 type DBManager interface {
-	ResolveTestRecord(string, ...RelationValuesOption)
+	Create(string, ...RelationValuesOption)
 }
 
 // RelationValues represents the models values used for querying the db in tests
@@ -44,9 +44,9 @@ func New(db *sql.DB, t *testing.T, defaultValues map[string]RelationValues) DBMa
 	}
 }
 
-// ResolveTestRecord checks if there is a record in the database with the
-// give values and creates it if it's not there
-func (dbMan *dbManager) ResolveTestRecord(
+// Create creates a new record for the relation specified by `tableName`.
+// Passing RelationValuesOption overrides the default value set in the creator.
+func (dbMan *dbManager) Create(
 	tableName string,
 	opts ...RelationValuesOption,
 ) {
