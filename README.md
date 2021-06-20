@@ -46,23 +46,23 @@ it's required for the test. At that point, it's just a matter of initializing th
 creating the test records. This would look somewhat like this:
 
 ```go
-    cases := []struct {
+	cases := []struct {
 		title     string
 		runBefore func(*sql.DB, *testing.T)
-        exp       expType
+		exp       expType
 		expErr    error
 	}{
-        {
-            name: "fails to create existing user",
-            runBefore: func(db *sql.DB, t *testing.T) { // injecting the db handler can be done at the execution time
-                dbMan := models.NewTestDBManager(db, t)
+		{
+			name: "fails to create existing user",
+			runBefore: func(db *sql.DB, t *testing.T) { // injecting the db handler can be done at the execution time
+				dbMan := models.NewTestDBManager(db, t)
 				dbMan.ResolveTestRecord(
 					"users",
 					dbmanager.SetFieldValue("id", existingUserID), // presuming there's a unique constraint on the id field, this would cause the creation to fail
 				)
-            },
-        },
-    }
+			},
+		},
+	}
 ```
 
 ## Other thoughts
